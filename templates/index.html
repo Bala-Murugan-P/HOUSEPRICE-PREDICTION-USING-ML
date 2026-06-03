@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EstateIQ — AI House Price Predictor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+  <!-- Ambient BG -->
+  <div class="ambient-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <canvas id="grain"></canvas>
+  </div>
+
+  <!-- Nav -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <div class="logo">
+        <span class="logo-mark">⌂</span>
+        <span class="logo-text">EstateIQ</span>
+      </div>
+      <div class="nav-pill">
+        <span class="status-dot"></span>
+        <span>AI Model Active</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <header class="hero">
+    <div class="hero-content">
+      <div class="hero-badge">Random Forest · 100 Trees · 9 Features</div>
+      <h1 class="hero-title">
+        <span class="title-light">Predict Your</span><br>
+        <span class="title-bold">Property Value</span>
+      </h1>
+      <p class="hero-sub">Machine learning trained on 1,168 homes. Enter your property details below for an instant AI-powered valuation.</p>
+      <div class="hero-stats">
+        <div class="stat">
+          <span class="stat-num">1,168</span>
+          <span class="stat-label">Homes Trained</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <span class="stat-num">100</span>
+          <span class="stat-label">Decision Trees</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <span class="stat-num">9</span>
+          <span class="stat-label">Key Features</span>
+        </div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="house-card">
+        <div class="house-svg-wrap">
+          <svg viewBox="0 0 200 180" xmlns="http://www.w3.org/2000/svg" class="house-svg">
+            <!-- House Body -->
+            <rect x="30" y="90" width="140" height="80" rx="4" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+            <!-- Roof -->
+            <polygon points="20,90 100,20 180,90" fill="rgba(212,175,55,0.15)" stroke="rgba(212,175,55,0.5)" stroke-width="1.5"/>
+            <!-- Door -->
+            <rect x="83" y="130" width="34" height="40" rx="3" fill="rgba(212,175,55,0.2)" stroke="rgba(212,175,55,0.4)" stroke-width="1"/>
+            <circle cx="113" cy="150" r="2.5" fill="rgba(212,175,55,0.8)"/>
+            <!-- Windows -->
+            <rect x="42" y="105" width="30" height="24" rx="3" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+            <line x1="57" y1="105" x2="57" y2="129" stroke="rgba(255,255,255,0.15)" stroke-width="0.8"/>
+            <line x1="42" y1="117" x2="72" y2="117" stroke="rgba(255,255,255,0.15)" stroke-width="0.8"/>
+            <rect x="128" y="105" width="30" height="24" rx="3" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+            <line x1="143" y1="105" x2="143" y2="129" stroke="rgba(255,255,255,0.15)" stroke-width="0.8"/>
+            <line x1="128" y1="117" x2="158" y2="117" stroke="rgba(255,255,255,0.15)" stroke-width="0.8"/>
+            <!-- Chimney -->
+            <rect x="130" y="30" width="16" height="35" rx="2" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+            <!-- Ground line -->
+            <line x1="10" y1="170" x2="190" y2="170" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+            <!-- Stars -->
+            <circle cx="20" cy="30" r="1.5" fill="rgba(212,175,55,0.6)"/>
+            <circle cx="170" cy="15" r="1" fill="rgba(212,175,55,0.4)"/>
+            <circle cx="155" cy="40" r="1" fill="rgba(255,255,255,0.4)"/>
+            <circle cx="40" cy="10" r="1.2" fill="rgba(255,255,255,0.5)"/>
+          </svg>
+        </div>
+        <div class="house-card-label">AI-Powered Valuation</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Form -->
+  <main class="main-container">
+    <div class="form-card">
+      <div class="form-header">
+        <h2 class="form-title">Property Details</h2>
+        <p class="form-subtitle">Fill in your property specifications for an instant valuation</p>
+      </div>
+
+      <form id="predictionForm">
+        <div class="features-grid">
+
+          {% for feat in features %}
+          <div class="feature-item" data-index="{{ loop.index0 }}">
+            <div class="feature-header">
+              <span class="feature-icon">{{ feat.icon }}</span>
+              <div class="feature-meta">
+                <label class="feature-label" for="{{ feat.name }}">{{ feat.label }}</label>
+                <span class="feature-desc">{{ feat.description }}</span>
+              </div>
+            </div>
+
+            {% if feat.type == 'slider' %}
+            <div class="slider-container">
+              <input
+                type="range"
+                id="{{ feat.name }}"
+                name="{{ feat.name }}"
+                min="{{ feat.min }}"
+                max="{{ feat.max }}"
+                value="{{ feat.default }}"
+                step="1"
+                class="feature-slider"
+                oninput="updateSlider(this)"
+              />
+              <div class="slider-labels">
+                <span>{{ feat.min }}</span>
+                <span id="{{ feat.name }}_val" class="slider-current">{{ feat.default }}{{ feat.unit }}</span>
+                <span>{{ feat.max }}</span>
+              </div>
+            </div>
+            {% else %}
+            <div class="input-container">
+              <input
+                type="number"
+                id="{{ feat.name }}"
+                name="{{ feat.name }}"
+                min="{{ feat.min }}"
+                max="{{ feat.max }}"
+                value="{{ feat.default }}"
+                class="feature-input"
+              />
+              {% if feat.unit %}
+              <span class="input-unit">{{ feat.unit }}</span>
+              {% endif %}
+            </div>
+            {% endif %}
+          </div>
+          {% endfor %}
+
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-reset" onclick="resetForm()">
+            <span>↺</span> Reset
+          </button>
+          <button type="submit" class="btn-predict" id="submitBtn">
+            <span class="btn-text">Predict Value</span>
+            <span class="btn-icon">→</span>
+            <div class="btn-shimmer"></div>
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Result Panel -->
+    <div class="result-panel" id="resultPanel">
+      <div class="result-inner">
+        <div class="result-loading" id="resultLoading">
+          <div class="loading-spinner"></div>
+          <span>Analyzing property…</span>
+        </div>
+
+        <div class="result-content" id="resultContent" style="display:none">
+          <div class="result-label">Estimated Market Value</div>
+          <div class="result-price" id="resultPrice">$0</div>
+          <div class="result-tier" id="resultTier">—</div>
+
+          <div class="result-divider"></div>
+
+          <div class="result-breakdown" id="resultBreakdown">
+            <!-- JS fills this -->
+          </div>
+
+          <div class="result-footer">
+            <span class="result-model" id="resultModel">Random Forest</span>
+            <span class="result-disclaimer">Estimate only. Consult a professional.</span>
+          </div>
+        </div>
+
+        <div class="result-error" id="resultError" style="display:none">
+          <span class="error-icon">⚠</span>
+          <span id="errorMessage">Something went wrong. Please try again.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Model Info -->
+    <div class="model-info-card">
+      <h3 class="info-title">Why Random Forest?</h3>
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="info-icon">🎯</div>
+          <div class="info-text">
+            <strong>Best Accuracy</strong>
+            <span>Outperformed Linear Regression &amp; Decision Tree in cross-validation</span>
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="info-icon">🌳</div>
+          <div class="info-text">
+            <strong>100 Decision Trees</strong>
+            <span>Ensemble of trees reduces overfitting and variance</span>
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="info-icon">🔍</div>
+          <div class="info-text">
+            <strong>9 Key Features</strong>
+            <span>OverallQual, GrLivArea, GarageArea, TotalBsmtSF, and more</span>
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="info-icon">📊</div>
+          <div class="info-text">
+            <strong>1,168 Samples</strong>
+            <span>Trained on Ames Housing Dataset — a benchmark dataset</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <span class="footer-brand">⌂ EstateIQ</span>
+      <span class="footer-copy">House Price Prediction · Random Forest ML · Built with Flask &amp; Python</span>
+    </div>
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

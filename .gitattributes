@@ -1,0 +1,22 @@
+# Normalize line endings for all files
+* text=auto
+
+# Define explicit line endings for these files
+*.py text eol=lf
+*.ipynb text eol=lf
+*.csv text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
